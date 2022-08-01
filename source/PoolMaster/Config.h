@@ -3,6 +3,8 @@
 #define DEBUG           ->comment this line to prevent code from writing debug messages to serial port
 #include "DebugUtils.h"
 
+#define BOARD CONTROLLINO_MAXI // FNO Edit - remove if it causes problems
+
 #if defined(CONTROLLINO_MAXI) //Controllino Maxi board specifics
 
 #include <Controllino.h>
@@ -98,11 +100,11 @@ DallasTemperature sensors_A(&oneWire_A);
 #define TEMPERATURE_RESOLUTION 12
 
 //MAC Address of DS18b20 water temperature sensor
-DeviceAddress DS18b20_0 = { 0x28, 0x92, 0x25, 0x41, 0x0A, 0x00, 0x00, 0xEE };
+DeviceAddress DS18b20_0 = { 0x28, 0x83, 0xB4, 0x8B, 0x13, 0x21, 0x01, 0x45 };
 String sDS18b20_0;
 
 String sArduinoMac;
-//IPAddress ip(192, 168, 0, 188);  //IP address, needs to be adapted depending on local network topology
+IPAddress ip(192, 168, 1, 188);  //IP address, needs to be adapted depending on local network topology (Adapted by FNO)
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
@@ -162,7 +164,7 @@ struct StoreStruct
 */
 //MQTT stuff including local broker/server IP address, login and pwd
 MQTTClient MQTTClient;
-const char* MqttServerIP = "192.168.0.38";
+const char* MqttServerIP = "192.168.1.89";
 //const char* MqttServerIP = "broker.mqttdashboard.com";//cloud-based MQTT broker to test when node-red and MQTT broker are not installed locally (/!\ public and unsecure!)
 const char* MqttServerClientID = "ArduinoPool2"; // /!\ choose a client ID which is unique to this Arduino board
 const char* MqttServerLogin = nullptr;  //replace by const char* MqttServerLogin = nullptr; in case broker does not require a login/pwd
