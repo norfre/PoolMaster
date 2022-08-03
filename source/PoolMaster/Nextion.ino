@@ -251,12 +251,12 @@ void UpdateTFT()
       debounceH++;
   }
 
-  if (digitalRead(RELAY_R1) != TFTStruc.R0)
+  if (digitalRead(FILTRATION_PUMP_STOP) != TFTStruc.R0)
   {
     if ((debounceR0 == 0) || (debounceR0 > debounceCount))
     {
       debounceR0 = 0;
-      TFTStruc.R0 = digitalRead(RELAY_R1);
+      TFTStruc.R0 = digitalRead(FILTRATION_PUMP_STOP);
       myNex.writeNum(F("page1.vabR0.val"), TFTStruc.R0);
       if (CurrentPage == 1)
       {
@@ -270,12 +270,12 @@ void UpdateTFT()
       debounceR0++;
   }
 
-  if (digitalRead(RELAY_R2) != TFTStruc.R1)
+  if (digitalRead(FILTRATION_PUMP_MIDSPEED) != TFTStruc.R1)
   {
     if ((debounceR1 == 0) || (debounceR1 > debounceCount))
     {
       debounceR1 = 0;
-      TFTStruc.R1 = digitalRead(RELAY_R2);
+      TFTStruc.R1 = digitalRead(FILTRATION_PUMP_MIDSPEED);
       myNex.writeNum(F("page1.vabR1.val"), TFTStruc.R1);
       if (CurrentPage == 1)
       {
@@ -289,12 +289,12 @@ void UpdateTFT()
       debounceR1++;
   }
 
-  if (digitalRead(RELAY_R6) != TFTStruc.R2)
+  if (digitalRead(FILTRATION_PUMP_HIGHSPEED) != TFTStruc.R2)
   {
     if ((debounceR2 == 0) || (debounceR2 > debounceCount))
     {
       debounceR2 = 0;
-      TFTStruc.R2 = digitalRead(RELAY_R6);
+      TFTStruc.R2 = digitalRead(FILTRATION_PUMP_HIGHSPEED);
 
       myNex.writeNum(F("page1.vabR2.val"), TFTStruc.R2);
       if (CurrentPage == 1)
@@ -496,13 +496,13 @@ void trigger8()
   DEBUG_PRINT(F("Relay 0 button"));
   if (TFTStruc.R0)
   {
-    String Cmd = F("{\"Relay\":[1,1]}");
+    String Cmd = F("{\"Relay\":[6,1]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }
   else
   {
-    String Cmd = F("{\"Relay\":[1,0]}");
+    String Cmd = F("{\"Relay\":[6,0]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }
@@ -517,13 +517,13 @@ void trigger9()
   DEBUG_PRINT(F("Relay 1 button"));
   if (TFTStruc.R1)
   {
-    String Cmd = F("{\"Relay\":[2,1]}");
+    String Cmd = F("{\"Relay\":[8,1]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }
   else
   {
-    String Cmd = F("{\"Relay\":[2,0]}");
+    String Cmd = F("{\"Relay\":[8,0]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }
@@ -538,13 +538,13 @@ void trigger10()
   DEBUG_PRINT(F("Relay 2 button"));
   if (TFTStruc.R2)
   {
-    String Cmd = F("{\"Relay\":[6,1]}");
+    String Cmd = F("{\"Relay\":[9,1]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }
   else
   {
-    String Cmd = F("{\"Relay\":[6,0]}");
+    String Cmd = F("{\"Relay\":[9,0]}");
     queueIn.enqueue(Cmd);
     DEBUG_PRINT(Cmd);
   }

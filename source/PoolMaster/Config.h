@@ -7,18 +7,18 @@
 
 #include <Controllino.h>
 
-//output relays pin definitions
-#define FILTRATION_PUMP CONTROLLINO_R4  //CONTROLLINO_RELAY_4
-#define PH_PUMP    CONTROLLINO_R3       //CONTROLLINO_RELAY_3
-#define CHL_PUMP   CONTROLLINO_R5       //CONTROLLINO_RELAY_5
-#define HEAT_ON    CONTROLLINO_R0       //CONTROLLINO_RELAY_0
+//output relays pin definitions -- Modified by FNO
+#define FILTRATION_PUMP CONTROLLINO_R7  //CONTROLLINO_RELAY_7
+#define PH_PUMP    CONTROLLINO_R4       //CONTROLLINO_RELAY_4
+#define CHL_PUMP   CONTROLLINO_R3       //CONTROLLINO_RELAY_3
+#define HEAT_ON    CONTROLLINO_R1       //CONTROLLINO_RELAY_1
+#define FILTRATION_PUMP_STOP   CONTROLLINO_R6       //CONTROLLINO_RELAY_6
+#define FILTRATION_PUMP_MIDSPEED   CONTROLLINO_R8       //CONTROLLINO_RELAY_8
+#define FILTRATION_PUMP_HIGHSPEED   CONTROLLINO_R9       //CONTROLLINO_RELAY_9
 
-#define RELAY_R1   CONTROLLINO_R1       //CONTROLLINO_RELAY_1
+#define RELAY_R0   CONTROLLINO_R0       //CONTROLLINO_RELAY_0
 #define RELAY_R2   CONTROLLINO_R2       //CONTROLLINO_RELAY_2
-#define RELAY_R6   CONTROLLINO_R6       //CONTROLLINO_RELAY_6
-#define RELAY_R7   CONTROLLINO_R7       //CONTROLLINO_RELAY_7
-#define RELAY_R8   CONTROLLINO_R8       //CONTROLLINO_RELAY_8
-#define RELAY_R9   CONTROLLINO_R9       //CONTROLLINO_RELAY_9
+#define RELAY_R5   CONTROLLINO_R5       //CONTROLLINO_RELAY_5
 
 //Digital input pins connected to Acid and Chl tank level reed switches
 #define CHL_LEVEL  CONTROLLINO_D1       //CONTROLLINO_D1 pin 3
@@ -36,6 +36,10 @@
 #define PUSH_BUTTON_PIN  CONTROLLINO_A5   //CONTROLLINO_A5 pin A5. Connect a button switch from this pin to ground
 #define GREEN_LED_PIN    CONTROLLINO_D0  //CONTROLLINO_D0). Digital output pin to switch ON/OFF Green LED of push button
 #define RED_LED_PIN      CONTROLLINO_D2  //CONTROLLINO_D2). Digital output pin to switch ON/OFF Red LED of push button
+
+//Digital input pin connected to flow switch -- Added by FNO
+#define FLOW_SWITCH  CONTROLLINO_D6       //CONTROLLINO_D6 pin 8
+//#define FILTER_PUMP_IS_RUNNING_SENSOR_PIN  CONTROLLINO_D7       //CONTROLLINO_D7 pin 9 FNO - Not needed?
 
 #else //Mega2560 board specifics
 

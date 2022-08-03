@@ -197,7 +197,7 @@ bool PSIError = 0;
 //In this case, all pumps start/Stop are managed by the Arduino relays
 //In the case of the filtration pump not being managed by the Arduino, the two first pin parameters "FILTRATION_PUMP" might differ (see Pump class for more details)
 Pump HeatCirculatorPump(HEAT_ON, HEAT_ON, NO_TANK, FILTRATION_PUMP, 0.0, 0.0);
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK, 0.0, 0.0);
+Pump FiltrationPump(FILTRATION_PUMP, FLOW_SWITCH, NO_TANK, NO_INTERLOCK, 0.0, 0.0); // FNO Edit
 Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTRATION_PUMP, storage.pHPumpFR, storage.pHTankVol);
 Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTRATION_PUMP, storage.ChlPumpFR, storage.ChlTankVol);
 
@@ -328,13 +328,14 @@ void setup()
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
   pinMode(HEAT_ON, OUTPUT);
-
-  pinMode(RELAY_R1, OUTPUT);
+  pinMode(FILTRATION_PUMP_STOP, OUTPUT);
+  pinMode(FILTRATION_PUMP_MIDSPEED, OUTPUT);
+  pinMode(FILTRATION_PUMP_HIGHSPEED, OUTPUT);
+  
+  pinMode(RELAY_R0, OUTPUT);
   pinMode(RELAY_R2, OUTPUT);
-  pinMode(RELAY_R6, OUTPUT);
-  pinMode(RELAY_R7, OUTPUT);
-  pinMode(RELAY_R8, OUTPUT);
-  pinMode(RELAY_R9, OUTPUT);
+  pinMode(RELAY_R5, OUTPUT);
+
 
   pinMode(CHL_LEVEL, INPUT_PULLUP);
   pinMode(PH_LEVEL, INPUT_PULLUP);
@@ -343,6 +344,9 @@ void setup()
   pinMode(ORP_MEASURE, INPUT);
   pinMode(PH_MEASURE, INPUT);
   pinMode(PSI_MEASURE, INPUT);
+
+  pinMode(FLOW_SWITCH, INPUT_PULLUP); //FNO Edit
+  //pinMode(FILTER_PUMP_IS_RUNNING_SENSOR_PIN, OUTPUT); //FNO Edit - not needed?
 
 
   // initialize Ethernet device
@@ -399,9 +403,9 @@ void setup()
     digitalWrite(bRED_LED_PIN, true);
   }
 
-  //start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
-  if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-    FiltrationPump.Start();
+  //start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually -- FNO EDIT -> Manually choosen
+  //if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+  //  FiltrationPump.Start();
 
   //Init MQTT
   MQTTClient.setOptions(60, false, 6000);
@@ -680,7 +684,12 @@ void GenericCallback(Task* me)
 
   //start filtration pump as scheduled
   if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && (hour() == storage.FiltrationStart) && (minute() == 0))
+  {
     FiltrationPump.Start();
+    Serial << F("FiltrationPump.Start - 1");
+    delay(20);
+    digitalWrite(FILTRATION_PUMP, LOW);  //TODO Should LOW be something else? FNO
+  }
   PSIError = PSIError;
 
   //start PIDs with delay after FiltrationStart in order to let the readings stabilize
@@ -716,15 +725,16 @@ void GenericCallback(Task* me)
 
   //The circulator of the pool water heating circuit needs to run regularly to avoid blocking
   //Let it run every day at noon for 2 mins
-  if (storage.AutoMode && ((hour() == 12) && (minute() == 0)))
-  {
-    HeatCirculatorPump.Start();
-  }
-
-  if (storage.AutoMode && ((hour() == 12) && (minute() == 2)))
-  {
-    HeatCirculatorPump.Stop();
-  }
+  //FNO Edit - Don't want this
+  //if (storage.AutoMode && ((hour() == 12) && (minute() == 0)))
+  //{
+  //  HeatCirculatorPump.Start();
+  //}
+  //
+  //if (storage.AutoMode && ((hour() == 12) && (minute() == 2)))
+  //{
+  //  HeatCirculatorPump.Stop();
+  //}
 
 
   //stop filtration pump and PIDs as scheduled unless we are in AntiFreeze mode
@@ -733,19 +743,28 @@ void GenericCallback(Task* me)
     SetPhPID(false);
     SetOrpPID(false);
     FiltrationPump.Stop();
+    digitalWrite(FILTRATION_PUMP_STOP, HIGH);
+    delay(20);
+    digitalWrite(FILTRATION_PUMP_STOP, LOW);
   }
 
   //Outside regular filtration hours, start filtration in case of cold Air temperatures (<-2.0deg)
   if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
   {
     FiltrationPump.Start();
+    Serial << F("FiltrationPump.Start - 2");
     AntiFreezeFiltering = true;
+    delay(20);
+    digitalWrite(FILTRATION_PUMP, LOW);
   }
 
   //Outside regular filtration hours and if in AntiFreezeFiltering mode but Air temperature rose back above 2.0deg, stop filtration
   if (storage.AutoMode && FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && AntiFreezeFiltering && (storage.TempExternal > 2.0))
   {
     FiltrationPump.Stop();
+    digitalWrite(FILTRATION_PUMP_STOP, HIGH);
+    delay(20);
+    digitalWrite(FILTRATION_PUMP_STOP, LOW);
     AntiFreezeFiltering = false;
   }
 
@@ -753,6 +772,9 @@ void GenericCallback(Task* me)
   if (FiltrationPump.IsRunning() && ((millis() - FiltrationPump.LastStartTime) > 7000) && (storage.PSIValue < storage.PSI_MedThreshold))
   {
     FiltrationPump.Stop();
+    digitalWrite(FILTRATION_PUMP_STOP, HIGH);
+    delay(20);
+    digitalWrite(FILTRATION_PUMP_STOP, LOW);
     PSIError = true;
     digitalWrite(bRED_LED_PIN, true);
     digitalWrite(bGREEN_LED_PIN, false);
@@ -1197,10 +1219,10 @@ void EncodeBitmap()
   BitMap2 |= (OrpPID.GetMode() & 1) << 6;
   BitMap2 |= (storage.AutoMode & 1) << 5;
   BitMap2 |= (storage.WaterHeat & 1) << 4;
-  BitMap2 |= (digitalRead(RELAY_R1) & 1) << 3;
-  BitMap2 |= (digitalRead(RELAY_R2) & 1) << 2;
-  BitMap2 |= (digitalRead(RELAY_R6) & 1) << 1;
-  BitMap2 |= (digitalRead(RELAY_R7) & 1) << 0;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_STOP) & 1) << 3;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_MIDSPEED) & 1) << 2;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_HIGHSPEED) & 1) << 1;
+  BitMap2 |= (digitalRead(RELAY_R0) & 1) << 0;
 
 }
 
@@ -1235,12 +1257,27 @@ void getMeasures(DeviceAddress deviceAddress_0)
   storage.OrpValue = samples_Orp.getAverage(10);
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
 
+  //Flow Switch  -- FNO EDIT TODO
+/*  if (digitalRead(FLOW_SWITCH) == HIGH) {
+    digitalWrite(FILTER_PUMP_IS_RUNNING_SENSOR_PIN, LOW);
+  } else {
+    digitalWrite(FILTER_PUMP_IS_RUNNING_SENSOR_PIN, HIGH);
+  }
+*/  
+
   //PSI (water pressure)
-  float psi_sensor_value = ((analogRead(PSI_MEASURE) * 0.03) - 0.5) * 5.0 / 4.0;                        // from 0.5 to 4.5V -> 0.0 to 5.0 Bar (depends on sensor ref!)                                                                           // Remove this line when sensor is integrated!!!
-  storage.PSIValue = (storage.PSICalibCoeffs0 * psi_sensor_value) + storage.PSICalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
-  samples_PSI.add(storage.PSIValue);                                                                    // compute average of PSI from last 5 measurements
-  storage.PSIValue = samples_PSI.getAverage(3);
-  Serial << F("PSI: ") << psi_sensor_value << " - " << storage.PSIValue << F("Bar") << _endl;
+  //FNO EDIT -- Manually set dummy pressure reading
+  //float psi_sensor_value = ((analogRead(PSI_MEASURE) * 0.03) - 0.5) * 5.0 / 4.0;                        // from 0.5 to 4.5V -> 0.0 to 5.0 Bar (depends on sensor ref!)                                                                           // Remove this line when sensor is integrated!!! 
+  //storage.PSIValue = (storage.PSICalibCoeffs0 * psi_sensor_value) + storage.PSICalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
+  //samples_PSI.add(storage.PSIValue);                                                                    // compute average of PSI from last 5 measurements
+  //storage.PSIValue = samples_PSI.getAverage(3);
+  
+    if (digitalRead(FLOW_SWITCH) == HIGH) {
+      storage.PSIValue = 0;
+    } else {
+      storage.PSIValue = 1;
+    }
+  Serial << F("PSI: ") << " - " << storage.PSIValue << F("Bar") << _endl;
 }
 
 bool loadConfig()
@@ -1526,6 +1563,9 @@ void ProcessCommand(String JSONCommand)
                 {
                   EmergencyStopFiltPump = true;
                   FiltrationPump.Stop();  //stop filtration pump
+                  digitalWrite(FILTRATION_PUMP_STOP, HIGH);
+                  delay(20);
+                  digitalWrite(FILTRATION_PUMP_STOP, LOW);
 
                   //Start PIDs
                   SetPhPID(false);
@@ -1534,7 +1574,18 @@ void ProcessCommand(String JSONCommand)
                 else
                 {
                   EmergencyStopFiltPump = false;
+                  
+                  Serial << F("FiltrationPump.Start - 3 - About to start") << _endl;
+                  Serial << F("FiltrationPump.IsRunning ") << FiltrationPump.IsRunning() << _endl;
+                  
                   FiltrationPump.Start();   //start filtration pump
+                  Serial << F("FiltrationPump.Start - 3 - Started") << _endl;
+                  Serial << F("FiltrationPump.IsRunning ") << FiltrationPump.IsRunning() << _endl;                
+                  
+                  delay(200);
+                  digitalWrite(FILTRATION_PUMP, HIGH);
+                  Serial << F("FiltrationPump.Start - 3 - delay applied") << _endl;
+                  Serial << F("FiltrationPump.IsRunning ") << FiltrationPump.IsRunning() << _endl;                 
                 }
               }
               else if (command.containsKey(F("PhPump"))) //"PhPump" command which starts or stops the Acid pump
@@ -1729,7 +1780,12 @@ void ProcessCommand(String JSONCommand)
 
                     //start filtration pump if within scheduled time slots
                     if (!EmergencyStopFiltPump && storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-                      FiltrationPump.Start();
+                        {
+                          FiltrationPump.Start();
+                          Serial << F("FiltrationPump.Start - 4");
+                          delay(20);
+                          digitalWrite(FILTRATION_PUMP, LOW);
+                        }
                   }
                   else if (command.containsKey(F("DelayPID"))) //"DelayPID" command which sets the delay from filtering start before PID loops start regulating
                   {
@@ -1750,23 +1806,23 @@ void ProcessCommand(String JSONCommand)
                     {
                       switch ((int)command[F("Relay")][0])
                       {
-                        case 1:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R1, true) : digitalWrite(RELAY_R1, false);
+                        case 0:
+                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R0, true) : digitalWrite(RELAY_R0, false);
                           break;
                         case 2:
                           (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R2, true) : digitalWrite(RELAY_R2, false);
                           break;
                         case 6:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R6, true) : digitalWrite(RELAY_R6, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP_STOP, true) : digitalWrite(FILTRATION_PUMP_STOP, false);
                           break;
-                        case 7:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R7, true) : digitalWrite(RELAY_R7, false);
+                        case 5:
+                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R5, true) : digitalWrite(RELAY_R5, false);
                           break;
                         case 8:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R8, true) : digitalWrite(RELAY_R8, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP_MIDSPEED, true) : digitalWrite(FILTRATION_PUMP_MIDSPEED, false);
                           break;
                         case 9:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R9, true) : digitalWrite(RELAY_R9, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP_HIGHSPEED, true) : digitalWrite(FILTRATION_PUMP_HIGHSPEED, false);
                           break;
                       }
                     }
