@@ -104,7 +104,7 @@ DeviceAddress DS18b20_0 = { 0x28, 0x83, 0xB4, 0x8B, 0x13, 0x21, 0x01, 0x45 };
 String sDS18b20_0;
 
 String sArduinoMac;
-IPAddress ip(192, 168, 1, 188);  //IP address, needs to be adapted depending on local network topology (Adapted by FNO)
+IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on local network topology (Adapted by FNO)
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
@@ -136,7 +136,7 @@ struct StoreStruct
   7.4, 750.0, 0.5, 0.25, 10.0, 27.0, 3.0, 4.78, -2.54, -1291, 2580, 1.11, 0.0,
   2000000.0, 0.0, 0.0, 4500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4,
   100.0, 100.0, 20.0, 20.0, 1.5, 3.0,
-  {192, 168, 0, 188}, {255, 255, 255, 0}, {192, 168, 0, 254}, {8, 8, 8, 8}, {0xA8, 0x61, 0x0A, 0xAE, 0x2C, 0x68},
+  {192, 168, 1, 226}, {255, 255, 255, 0}, {192, 168, 1, 1}, {1, 1, 1, 1}, {0xA8, 0x61, 0x0A, 0xAE, 0x2C, 0x68},
   0
 };
 
