@@ -344,6 +344,8 @@ void setup()
   pinMode(PH_MEASURE, INPUT);
   pinMode(PSI_MEASURE, INPUT);
 
+  pinMode(FLOW_SWITCH, INPUT_PULLUP);
+
 
   // initialize Ethernet device
   // if the ip config is the default one, use DHCP to allocate an ip otherwise use the eeprom-stored config
@@ -1235,7 +1237,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   storage.OrpValue = samples_Orp.getAverage(10);
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
 
-  //PSI (water pressure) --FNO EDIT TODO
+  //PSI (water pressure) --FNO EDIT - Using flow switch instead of a pressure sensor
   /*
   float psi_sensor_value = ((analogRead(PSI_MEASURE) * 0.03) - 0.5) * 5.0 / 4.0;                        // from 0.5 to 4.5V -> 0.0 to 5.0 Bar (depends on sensor ref!)                                                                           // Remove this line when sensor is integrated!!!
   storage.PSIValue = (storage.PSICalibCoeffs0 * psi_sensor_value) + storage.PSICalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
@@ -1243,8 +1245,13 @@ void getMeasures(DeviceAddress deviceAddress_0)
   storage.PSIValue = samples_PSI.getAverage(3);
   Serial << F("PSI: ") << psi_sensor_value << " - " << storage.PSIValue << F("Bar") << _endl;
   */
-  storage.PSIValue = 1;
-  Serial << F("PSI: ") << " - " << storage.PSIValue << F("Bar -- Manually set") << _endl; //FNO Edit TODO
+
+  if (digitalRead(FLOW_SWITCH) == HIGH) {
+    storage.PSIValue = 0;
+  } else {
+    storage.PSIValue = 1;
+  }
+  Serial << F("PSI: ") << " - " << storage.PSIValue << F("Bar -- Statically set from flow switch reading") << _endl;
 }
 
 bool loadConfig()

@@ -39,6 +39,9 @@
 #define GREEN_LED_PIN    CONTROLLINO_D0  //CONTROLLINO_D0). Digital output pin to switch ON/OFF Green LED of push button
 #define RED_LED_PIN      CONTROLLINO_D2  //CONTROLLINO_D2). Digital output pin to switch ON/OFF Red LED of push button
 
+//Digital input pin connected to flow switch
+#define FLOW_SWITCH CONTROLLINO_D6  //CONTROLLINO D6 pin 8
+
 #else //Mega2560 board specifics
 
 #include <Wire.h>
@@ -108,7 +111,7 @@ IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on 
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 122
+#define CONFIG_VERSION 123
 
 //interval (in miilisec) between MQTT publishes of measurement data
 #define PublishInterval 30000
