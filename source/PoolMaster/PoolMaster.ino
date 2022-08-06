@@ -459,7 +459,7 @@ void setup()
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
   //Initialize Filtration schedule
-  storage.FiltrationDuration = 12;
+  storage.FiltrationDuration = 24;
   storage.FiltrationStop = storage.FiltrationStart + storage.FiltrationDuration;
 
   //Ethernet client check loop

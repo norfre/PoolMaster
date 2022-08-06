@@ -111,7 +111,7 @@ IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on 
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 123
+#define CONFIG_VERSION 124
 
 //interval (in miilisec) between MQTT publishes of measurement data
 #define PublishInterval 30000
@@ -133,7 +133,7 @@ struct StoreStruct
 { //default values. Change the value of CONFIG_VERSION in order to restore the default values
   CONFIG_VERSION,
   0, 0, 1, 0,
-  8, 13, 21, 20, 120,
+  0, 24, 24, 24, 120,
   900, 2500,
   3000000, 3600000, 0, 0,
   7.4, 750.0, 0.5, 0.25, 10.0, 27.0, 3.0, 4.78, -2.54, -1291, 2580, 1.11, 0.0,
