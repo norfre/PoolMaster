@@ -196,10 +196,10 @@ bool PSIError = 0;
 //The four pumps of the system (instanciate the Pump class)
 //In this case, all pumps start/Stop are managed by the Arduino relays
 //In the case of the filtration pump not being managed by the Arduino, the two first pin parameters "FILTRATION_PUMP" might differ (see Pump class for more details)
-Pump HeatCirculatorPump(HEAT_ON, HEAT_ON, NO_TANK, FILTRATION_PUMP, 0.0, 0.0);
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK, 0.0, 0.0);
-Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTRATION_PUMP, storage.pHPumpFR, storage.pHTankVol);
-Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTRATION_PUMP, storage.ChlPumpFR, storage.ChlTankVol);
+Pump HeatCirculatorPump(HEAT_ON, HEAT_ON, NO_TANK, FILTER_PUMP_RUNNING, NO_STOP_PIN, 0.0, 0.0);
+Pump FiltrationPump(FILTRATION_PUMP, FILTER_PUMP_RUNNING, NO_TANK, NO_INTERLOCK, RELAY_R6, 0.0, 0.0);
+Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTER_PUMP_RUNNING, NO_STOP_PIN, storage.pHPumpFR, storage.pHTankVol);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTER_PUMP_RUNNING, NO_STOP_PIN, storage.ChlPumpFR, storage.ChlTankVol);
 
 //Tank level error flags
 bool PhLevelError = 0;
@@ -345,6 +345,7 @@ void setup()
   pinMode(PSI_MEASURE, INPUT);
 
   pinMode(FLOW_SWITCH, INPUT_PULLUP);
+  pinMode(FILTER_PUMP_RUNNING, OUTPUT);
 
 
   // initialize Ethernet device
@@ -626,12 +627,17 @@ void GenericCallback(Task* me)
   //UPdate Nextion TFT
   UpdateTFT();
 
+  //Reset filter pump relays
+  digitalWrite(FILTRATION_PUMP, PUMP_OFF);
+  digitalWrite(RELAY_R6, PUMP_OFF);
+
   //If any error flag is true, blink Red push-button LED
   if (PhPump.UpTimeError || ChlPump.UpTimeError || PSIError || !PhPump.TankLevel() || !ChlPump.TankLevel())
   {
     digitalWrite(bGREEN_LED_PIN, false);
     RedPushButtonLedToggle = !RedPushButtonLedToggle;
     digitalWrite(bRED_LED_PIN, RedPushButtonLedToggle);
+    Serial << F("!!RED LED Blinking!! ") << _endl;
   }
   else
     digitalWrite(bRED_LED_PIN, false);

@@ -42,6 +42,9 @@
 //Digital input pin connected to flow switch
 #define FLOW_SWITCH CONTROLLINO_D6  //CONTROLLINO D6 pin 8
 
+//Digital dummy pin
+#define FILTER_PUMP_RUNNING CONTROLLINO_D7  //Not connected
+
 #else //Mega2560 board specifics
 
 #include <Wire.h>
@@ -111,7 +114,7 @@ IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on 
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 124
+#define CONFIG_VERSION 126
 
 //interval (in miilisec) between MQTT publishes of measurement data
 #define PublishInterval 30000
