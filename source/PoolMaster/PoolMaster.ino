@@ -197,7 +197,7 @@ bool PSIError = 0;
 //In this case, all pumps start/Stop are managed by the Arduino relays
 //In the case of the filtration pump not being managed by the Arduino, the two first pin parameters "FILTRATION_PUMP" might differ (see Pump class for more details)
 Pump HeatCirculatorPump(HEAT_ON, HEAT_ON, NO_TANK, FILTER_PUMP_RUNNING, NO_STOP_PIN, 0.0, 0.0);
-Pump FiltrationPump(FILTRATION_PUMP, FILTER_PUMP_RUNNING, NO_TANK, NO_INTERLOCK, RELAY_R6, 0.0, 0.0);
+Pump FiltrationPump(FILTRATION_PUMP, FILTER_PUMP_RUNNING, NO_TANK, NO_INTERLOCK, FILTRATION_PUMP_STOP, 0.0, 0.0);
 Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTER_PUMP_RUNNING, NO_STOP_PIN, storage.pHPumpFR, storage.pHTankVol);
 Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTER_PUMP_RUNNING, NO_STOP_PIN, storage.ChlPumpFR, storage.ChlTankVol);
 
@@ -328,13 +328,13 @@ void setup()
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
   pinMode(HEAT_ON, OUTPUT);
+  pinMode(FILTRATION_PUMP_STOP, OUTPUT);
+  pinMode(FILTRATION_PUMP_MIDSPEED, OUTPUT);
+  pinMode(FILTRATION_PUMP_HIGHSPEED, OUTPUT);
 
-  pinMode(RELAY_R1, OUTPUT);
+  pinMode(RELAY_R0, OUTPUT);
   pinMode(RELAY_R2, OUTPUT);
-  pinMode(RELAY_R6, OUTPUT);
-  pinMode(RELAY_R7, OUTPUT);
-  pinMode(RELAY_R8, OUTPUT);
-  pinMode(RELAY_R9, OUTPUT);
+  pinMode(RELAY_R5, OUTPUT);
 
   pinMode(CHL_LEVEL, INPUT_PULLUP);
   pinMode(PH_LEVEL, INPUT_PULLUP);
@@ -629,7 +629,9 @@ void GenericCallback(Task* me)
 
   //Reset filter pump relays
   digitalWrite(FILTRATION_PUMP, PUMP_OFF);
-  digitalWrite(RELAY_R6, PUMP_OFF);
+  digitalWrite(FILTRATION_PUMP_STOP, PUMP_OFF);
+  digitalWrite(FILTRATION_PUMP_MIDSPEED, PUMP_OFF);
+  digitalWrite(FILTRATION_PUMP_HIGHSPEED, PUMP_OFF);
 
   //If any error flag is true, blink Red push-button LED
   if (PhPump.UpTimeError || ChlPump.UpTimeError || PSIError || !PhPump.TankLevel() || !ChlPump.TankLevel())
@@ -724,6 +726,7 @@ void GenericCallback(Task* me)
 
   //The circulator of the pool water heating circuit needs to run regularly to avoid blocking
   //Let it run every day at noon for 2 mins
+  /*
   if (storage.AutoMode && ((hour() == 12) && (minute() == 0)))
   {
     HeatCirculatorPump.Start();
@@ -733,7 +736,7 @@ void GenericCallback(Task* me)
   {
     HeatCirculatorPump.Stop();
   }
-
+  */
 
   //stop filtration pump and PIDs as scheduled unless we are in AntiFreeze mode
   if (storage.AutoMode && FiltrationPump.IsRunning() && !AntiFreezeFiltering && ((hour() == storage.FiltrationStop) && (minute() == 0)))
@@ -1205,10 +1208,10 @@ void EncodeBitmap()
   BitMap2 |= (OrpPID.GetMode() & 1) << 6;
   BitMap2 |= (storage.AutoMode & 1) << 5;
   BitMap2 |= (storage.WaterHeat & 1) << 4;
-  BitMap2 |= (digitalRead(RELAY_R1) & 1) << 3;
-  BitMap2 |= (digitalRead(RELAY_R2) & 1) << 2;
-  BitMap2 |= (digitalRead(RELAY_R6) & 1) << 1;
-  BitMap2 |= (digitalRead(RELAY_R7) & 1) << 0;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP) & 1) << 3;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_STOP) & 1) << 2;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_MIDSPEED) & 1) << 1;
+  BitMap2 |= (digitalRead(FILTRATION_PUMP_HIGHSPEED) & 1) << 0;
 
 }
 
@@ -1767,23 +1770,23 @@ void ProcessCommand(String JSONCommand)
                     {
                       switch ((int)command[F("Relay")][0])
                       {
-                        case 1:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R1, true) : digitalWrite(RELAY_R1, false);
+                        case 0:
+                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R0, true) : digitalWrite(RELAY_R0, false);
                           break;
                         case 2:
                           (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R2, true) : digitalWrite(RELAY_R2, false);
                           break;
-                        case 6:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R6, true) : digitalWrite(RELAY_R6, false);
+                        case 5:
+                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R5, true) : digitalWrite(RELAY_R5, false);
                           break;
                         case 7:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R7, true) : digitalWrite(RELAY_R7, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP, true) : digitalWrite(FILTRATION_PUMP, false);
                           break;
                         case 8:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R8, true) : digitalWrite(RELAY_R8, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP_MIDSPEED, true) : digitalWrite(FILTRATION_PUMP_MIDSPEED, false);
                           break;
                         case 9:
-                          (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R9, true) : digitalWrite(RELAY_R9, false);
+                          (bool)command[F("Relay")][1] ? digitalWrite(FILTRATION_PUMP_HIGHSPEED, true) : digitalWrite(FILTRATION_PUMP_HIGHSPEED, false);
                           break;
                       }
                     }

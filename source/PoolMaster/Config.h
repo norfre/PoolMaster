@@ -10,17 +10,16 @@
 #include <Controllino.h>
 
 //output relays pin definitions
-#define FILTRATION_PUMP CONTROLLINO_R4  //CONTROLLINO_RELAY_4
-#define PH_PUMP    CONTROLLINO_R3       //CONTROLLINO_RELAY_3
-#define CHL_PUMP   CONTROLLINO_R5       //CONTROLLINO_RELAY_5
-#define HEAT_ON    CONTROLLINO_R0       //CONTROLLINO_RELAY_0
-
-#define RELAY_R1   CONTROLLINO_R1       //CONTROLLINO_RELAY_1
-#define RELAY_R2   CONTROLLINO_R2       //CONTROLLINO_RELAY_2
-#define RELAY_R6   CONTROLLINO_R6       //CONTROLLINO_RELAY_6
-#define RELAY_R7   CONTROLLINO_R7       //CONTROLLINO_RELAY_7
-#define RELAY_R8   CONTROLLINO_R8       //CONTROLLINO_RELAY_8
-#define RELAY_R9   CONTROLLINO_R9       //CONTROLLINO_RELAY_9
+#define RELAY_R0                    CONTROLLINO_R0       //CONTROLLINO_RELAY_0
+#define HEAT_ON                     CONTROLLINO_R1       //CONTROLLINO_RELAY_1
+#define RELAY_R2                    CONTROLLINO_R2       //CONTROLLINO_RELAY_2
+#define CHL_PUMP                    CONTROLLINO_R3       //CONTROLLINO_RELAY_3
+#define PH_PUMP                     CONTROLLINO_R4       //CONTROLLINO_RELAY_4
+#define RELAY_R5                    CONTROLLINO_R5       //CONTROLLINO_RELAY_5
+#define FILTRATION_PUMP_STOP        CONTROLLINO_R6       //CONTROLLINO_RELAY_6 -- Filtration Stop
+#define FILTRATION_PUMP             CONTROLLINO_R7       //CONTROLLINO_RELAY_7 -- Filtration Lowspeed
+#define FILTRATION_PUMP_MIDSPEED    CONTROLLINO_R8       //CONTROLLINO_RELAY_8 -- Filtration Midspeed
+#define FILTRATION_PUMP_HIGHSPEED   CONTROLLINO_R9       //CONTROLLINO_RELAY_9 -- Filtration Highspeed
 
 //Digital input pins connected to Acid and Chl tank level reed switches
 #define CHL_LEVEL  CONTROLLINO_D1       //CONTROLLINO_D1 pin 3
@@ -114,7 +113,7 @@ IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on 
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 126
+#define CONFIG_VERSION 127
 
 //interval (in miilisec) between MQTT publishes of measurement data
 #define PublishInterval 30000
