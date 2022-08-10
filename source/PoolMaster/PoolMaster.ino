@@ -111,7 +111,7 @@
   https://github.com/johnrickman/LiquidCrystal_I2C (rev 1.1.2)
   https://github.com/thijse/Arduino-EEPROMEx (rev 1.0.0)
   https://github.com/EinarArnason/ArduinoQueue
-  https://github.com/Loic74650/Pump (rev 0.0.1)
+  https://github.com/norfre/Pump (which is an edited version of https://github.com/Loic74650/Pump (rev 0.0.1))
   https://github.com/PaulStoffregen/Time (rev 1.5) -> /!\ Bug: in file "Time.cpp" "static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" must be replaced by "static volatile const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};"
   https://github.com/adafruit/RTClib (rev 1.2.0)
   https://github.com/thomasfredericks/Bounce2 (rev 2.5.2)
@@ -226,6 +226,11 @@ unsigned long PublishPeriod = 30000;
 //Signal filtering library. Only used in this case to compute the average
 //over multiple measurements but offers other filtering functions such as median, etc.
 RunningMedian samples_Temp = RunningMedian(10);
+RunningMedian samples_Temp_1 = RunningMedian(10);
+RunningMedian samples_Temp_2 = RunningMedian(10);
+RunningMedian samples_Temp_3 = RunningMedian(10);
+RunningMedian samples_Temp_4 = RunningMedian(10);
+RunningMedian samples_Temp_5 = RunningMedian(10);
 RunningMedian samples_Ph = RunningMedian(10);
 RunningMedian samples_Orp = RunningMedian(10);
 RunningMedian samples_PSI = RunningMedian(3);
@@ -797,13 +802,13 @@ void PublishDataCallback(Task* me)
     JsonObject& root = jsonBuffer.createObject();
 
     root.set<int>(F("Tmp"), (int)(storage.TempValue * 100));
+    root.set<int>(F("TmpPoHE1"), (int)(storage.PoolWaterHEout1 * 100));
+    root.set<int>(F("TmpPoHE2"), (int)(storage.PoolWaterHEout2 * 100));
+    root.set<int>(F("TmpPrHE1"), (int)(storage.PrimaryWaterHEout1 * 100));
+    root.set<int>(F("TmpPrHE2"), (int)(storage.PrimaryWaterHEout2 * 100));
+    root.set<int>(F("TmpExt"), (int)(storage.TempExternal * 100));
     root.set<int>(F("pH"), (int)(storage.PhValue * 100));
-    root.set<int>(F("PSI"), (int)(storage.PSIValue * 100));
-    root.set<int>(F("Orp"), (int)storage.OrpValue);
-    root.set<unsigned long>(F("FilUpT"), FiltrationPump.UpTime / 1000);
-    root.set<unsigned long>(F("PhUpT"), PhPump.UpTime / 1000);
-    root.set<unsigned long>(F("ChlUpT"), ChlPump.UpTime / 1000);
-
+    
     /*String tp = "Settings JSON buffer size is: ";
       tp += jsonBuffer.size();
       DEBUG_PRINT(tp);*/
@@ -840,6 +845,11 @@ void PublishDataCallback(Task* me)
     StaticJsonBuffer<200> jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
 
+    root.set<int>(F("PSI"), (int)(storage.PSIValue * 100));
+    root.set<int>(F("Orp"), (int)storage.OrpValue);
+    root.set<unsigned long>(F("FilUpT"), FiltrationPump.UpTime / 1000);
+    root.set<unsigned long>(F("PhUpT"), PhPump.UpTime / 1000);
+    root.set<unsigned long>(F("ChlUpT"), ChlPump.UpTime / 1000);
     root.set<int>(F("AcidF"), (int)(storage.AcidFill - PhPump.GetTankUsage()));
     root.set<int>(F("ChlF"), (int)(storage.ChlFill - ChlPump.GetTankUsage()));
     root.set<uint8_t>(F("IO"), BitMap);
@@ -1212,21 +1222,65 @@ void EncodeBitmap()
   BitMap2 |= (digitalRead(FILTRATION_PUMP_STOP) & 1) << 2;
   BitMap2 |= (digitalRead(FILTRATION_PUMP_MIDSPEED) & 1) << 1;
   BitMap2 |= (digitalRead(FILTRATION_PUMP_HIGHSPEED) & 1) << 0;
-
 }
 
 //Update temperature, Ph and Orp values
 void getMeasures(DeviceAddress deviceAddress_0)
 {
-  Serial << TimeBuffer << F(" - ");
+  Serial << TimeBuffer << F(" - ") << _endl;
 
-  //Water Temperature
-  samples_Temp.add(sensors_A.getTempC(deviceAddress_0));
+  //Pool water temperature
+  samples_Temp.add(sensors_A.getTempC(DS18b20_0));
   storage.TempValue = samples_Temp.getAverage(10);
   if (storage.TempValue == -127.00) {
     Serial << F("Error getting temperature from DS18b20_0") << _endl;
   } else {
-    Serial << F("DS18b20_0: ") << storage.TempValue << F("°C") << F(" - ");
+    Serial << F("DS18b20_0 (Pool water):") << storage.TempValue << F("°C") << F(" - ") << _endl;
+  }
+
+  //Pool water out 1st heat exchanger temperature
+  samples_Temp_1.add(sensors_A.getTempC(DS18b20_1));
+  storage.PoolWaterHEout1 = samples_Temp_1.getAverage(10);
+  if (storage.PoolWaterHEout1 == -127.00) {
+    Serial << F("Error getting temperature from DS18b20_1") << _endl;
+  } else {
+    Serial << F("DS18b20_1 (Pool water out 1st heat exchanger): ") << storage.PoolWaterHEout1 << F("°C") << F(" - ") << _endl;
+  }
+
+  //Pool water out 2nd heat exchanger temperature
+  samples_Temp_2.add(sensors_A.getTempC(DS18b20_2));
+  storage.PoolWaterHEout2 = samples_Temp_2.getAverage(10);
+  if (storage.PoolWaterHEout2 == -127.00) {
+    Serial << F("Error getting temperature from DS18b20_2") << _endl;
+  } else {
+    Serial << F("DS18b20_2 (Pool water out 2nd heat exchanger): ") << storage.PoolWaterHEout2 << F("°C") << F(" - ") << _endl;
+  }
+  
+  //Primary water out 1st heat exchanger temperature
+  samples_Temp_3.add(sensors_A.getTempC(DS18b20_3));
+  storage.PrimaryWaterHEout1 = samples_Temp_3.getAverage(10);
+  if (storage.TempExternal == -127.00) {
+    Serial << F("Error getting temperature from DS18b20_3") << _endl;
+  } else {
+    Serial << F("DS18b20_3 (Primary water out 1st heat exchanger): ") << storage.PrimaryWaterHEout1 << F("°C") << F(" - ") << _endl;
+  }
+
+  //Primary water out 2nd heat exchanger temperature
+  samples_Temp_4.add(sensors_A.getTempC(DS18b20_4));
+  storage.PrimaryWaterHEout2 = samples_Temp_4.getAverage(10);
+  if (storage.PrimaryWaterHEout2 == -127.00) {
+    Serial << F("Error getting temperature from DS18b20_4") << _endl;
+  } else {
+    Serial << F("DS18b20_4 (Primary water out 2nd heat exchanger): ") << storage.PrimaryWaterHEout1 << F("°C") << F(" - ") << _endl;
+  }
+
+  //External temperature
+  samples_Temp_5.add(sensors_A.getTempC(DS18b20_5));
+  storage.TempExternal = samples_Temp_5.getAverage(10);
+  if (storage.TempExternal == -127.00) {
+    Serial << F("Error getting temperature from DS18b20_5") << _endl;
+  } else {
+    Serial << F("DS18b20_5 (Temp external): ") << storage.TempExternal << F("°C") << F(" - ") << _endl;
   }
 
   //Ph
@@ -1849,13 +1903,23 @@ int freeRam () {
 void gettemp_start()
 {
   //String containing MAC address of temp sensor to be written to XML file
-  sDS18b20_0 = F("<DS18b20_0 Mac='0x28, 0x92, 0x25, 0x41, 0x0A, 0x00, 0x00, 0xEE'>");
-
+  sDS18b20_0 = F("<DS18b20_0 Mac='0x28, 0x83, 0xB4, 0x8B, 0x13, 0x21, 0x01, 0x45'>");
+  sDS18b20_1 = F("<DS18b20_1 Mac='0x28, 0x28, 0x44, 0x96, 0x13, 0x21, 0x01, 0xE2'>");
+  sDS18b20_2 = F("<DS18b20_2 Mac='0x28, 0x7A, 0x2A, 0xBE, 0x13, 0x21, 0x01, 0x7D'>");
+  sDS18b20_3 = F("<DS18b20_3 Mac='0x28, 0x89, 0xB5, 0xB6, 0x13, 0x21, 0x01, 0x92'>");
+  sDS18b20_4 = F("<DS18b20_4 Mac='0x28, 0xF9, 0x65, 0xC8, 0x13, 0x21, 0x01, 0xE9'>");
+  sDS18b20_5 = F("<DS18b20_5 Mac='0x28, 0x2D, 0xD2, 0x97, 0x13, 0x21, 0x01, 0xAD'>");
+  
   // Start up the library
   sensors_A.begin();
 
   // set the resolution
   sensors_A.setResolution(DS18b20_0, TEMPERATURE_RESOLUTION);
+  sensors_A.setResolution(DS18b20_1, TEMPERATURE_RESOLUTION);
+  sensors_A.setResolution(DS18b20_2, TEMPERATURE_RESOLUTION);
+  sensors_A.setResolution(DS18b20_3, TEMPERATURE_RESOLUTION);
+  sensors_A.setResolution(DS18b20_4, TEMPERATURE_RESOLUTION);
+  sensors_A.setResolution(DS18b20_5, TEMPERATURE_RESOLUTION);
 
   //don't wait ! Asynchronous mode
   sensors_A.setWaitForConversion(false);
@@ -1882,6 +1946,11 @@ void gettemp_read()
 {
   sprintf(TimeBuffer, "%d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
   getMeasures(DS18b20_0);
+  getMeasures(DS18b20_1);
+  getMeasures(DS18b20_2);
+  getMeasures(DS18b20_3);
+  getMeasures(DS18b20_4);
+  getMeasures(DS18b20_5);
   gettemp.next(gettemp_request);
 }
 

@@ -104,16 +104,26 @@ DallasTemperature sensors_A(&oneWire_A);
 //12bits (0,06°C) temperature sensor resolution
 #define TEMPERATURE_RESOLUTION 12
 
-//MAC Address of DS18b20 water temperature sensor
-DeviceAddress DS18b20_0 = { 0x28, 0x83, 0xB4, 0x8B, 0x13, 0x21, 0x01, 0x45 };
+//MAC Address of DS18b20 temperature sensors
+DeviceAddress DS18b20_0 = { 0x28, 0x83, 0xB4, 0x8B, 0x13, 0x21, 0x01, 0x45 }; //Pool water in
+DeviceAddress DS18b20_1 = { 0x28, 0x28, 0x44, 0x96, 0x13, 0x21, 0x01, 0xE2 }; //Pool water out 1st heat exchanger
+DeviceAddress DS18b20_2 = { 0x28, 0x7A, 0x2A, 0xBE, 0x13, 0x21, 0x01, 0x7D }; //Pool water out 2nd heat exchanger
+DeviceAddress DS18b20_3 = { 0x28, 0x89, 0xB5, 0xB6, 0x13, 0x21, 0x01, 0x92 }; //Primary water out 1st heat exchanger
+DeviceAddress DS18b20_4 = { 0x28, 0xF9, 0x65, 0xC8, 0x13, 0x21, 0x01, 0xE9 }; //Primary water out 2nd heat exchanger
+DeviceAddress DS18b20_5 = { 0x28, 0x2D, 0xD2, 0x97, 0x13, 0x21, 0x01, 0xAD }; //External temperature
 String sDS18b20_0;
+String sDS18b20_1;
+String sDS18b20_2;
+String sDS18b20_3;
+String sDS18b20_4;
+String sDS18b20_5;
 
 String sArduinoMac;
 IPAddress ip(192, 168, 1, 226);  //IP address, needs to be adapted depending on local network topology (Adapted by FNO)
 
 //Version of config stored in Eeprom
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 127
+#define CONFIG_VERSION 129
 
 //interval (in miilisec) between MQTT publishes of measurement data
 #define PublishInterval 30000
@@ -127,7 +137,7 @@ struct StoreStruct
   unsigned long PhPumpUpTimeLimit, ChlPumpUpTimeLimit;
   unsigned long PhPIDWindowSize, OrpPIDWindowSize, PhPIDwindowStartTime, OrpPIDwindowStartTime;
   double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, TempExternal, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
-  double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
+  double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PoolWaterHEout1, PoolWaterHEout2, PrimaryWaterHEout1, PrimaryWaterHEout2, PhValue, OrpValue, PSIValue;
   double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
   byte ip[4], subnet[4], gateway[4], dnsserver[4], mac[6];
   bool ipConfiged;
@@ -139,7 +149,7 @@ struct StoreStruct
   900, 2500,
   3000000, 3600000, 0, 0,
   7.4, 750.0, 0.5, 0.25, 10.0, 27.0, 3.0, 4.78, -2.54, -1291, 2580, 1.11, 0.0,
-  2000000.0, 0.0, 0.0, 4500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4,
+  2000000.0, 0.0, 0.0, 4500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4,
   100.0, 100.0, 20.0, 20.0, 1.5, 3.0,
   {192, 168, 1, 226}, {255, 255, 255, 0}, {192, 168, 1, 1}, {1, 1, 1, 1}, {0xA8, 0x61, 0x0A, 0xAE, 0x2C, 0x68},
   0
