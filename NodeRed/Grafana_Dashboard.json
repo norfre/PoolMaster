@@ -1,71 +1,33 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_INFLUXDB",
-      "label": "InfluxDB",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "influxdb",
-      "pluginName": "InfluxDB"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "panel",
-      "id": "bargauge",
-      "name": "Bar Gauge",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "gauge",
-      "name": "Gauge",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "6.7.1"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": ""
-    },
-    {
-      "type": "datasource",
-      "id": "influxdb",
-      "name": "InfluxDB",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
         "$$hashKey": "object:7",
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 31,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "aliasColors": {
@@ -76,11 +38,19 @@
         "pH setpoint": "dark-green"
       },
       "bars": false,
-      "cacheTimeout": null,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
       "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 3,
       "fillGradient": 5,
       "gridPos": {
@@ -107,19 +77,21 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "6.7.1",
+      "pluginVersion": "8.5.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [
         {
+          "$$hashKey": "object:60",
           "alias": "Orp",
           "yaxis": 2
         },
         {
+          "$$hashKey": "object:61",
           "alias": "Chl Pump",
           "fill": 1,
           "fillGradient": 3,
@@ -129,6 +101,7 @@
           "steppedLine": true
         },
         {
+          "$$hashKey": "object:62",
           "alias": "pH Pump",
           "fill": 1,
           "fillGradient": 3,
@@ -138,6 +111,7 @@
           "steppedLine": true
         },
         {
+          "$$hashKey": "object:63",
           "alias": "Orp setpoint",
           "fill": 0,
           "fillGradient": 0,
@@ -146,6 +120,7 @@
           "yaxis": 2
         },
         {
+          "$$hashKey": "object:64",
           "alias": "pH setpoint",
           "fill": 0,
           "fillGradient": 0,
@@ -164,7 +139,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"pH\")  / 100 FROM \"PoolMaster\" WHERE $timeFilter GROUP BY time($__interval) fill(linear)",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"pH\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -192,6 +167,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"Orp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -209,10 +185,11 @@
         {
           "alias": "Chl Pump",
           "groupBy": [],
+          "hide": false,
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"FiltState\" *7.5 FROM \"PoolMaster\" WHERE $timeFilter",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"ChlPumpState\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -240,7 +217,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"FiltState\" *7.5 FROM \"PoolMaster\" WHERE $timeFilter",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"pHPumpState\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)",
           "rawQuery": false,
           "refId": "D",
           "resultFormat": "time_series",
@@ -265,9 +242,11 @@
         {
           "alias": "Orp setpoint",
           "groupBy": [],
+          "hide": true,
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"OrpSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  ",
           "refId": "E",
           "resultFormat": "time_series",
           "select": [
@@ -285,9 +264,11 @@
         {
           "alias": "pH setpoint",
           "groupBy": [],
+          "hide": true,
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"pHSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))",
           "refId": "F",
           "resultFormat": "time_series",
           "select": [
@@ -310,9 +291,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "pH & Orp",
       "tooltip": {
         "shared": true,
@@ -321,14 +300,13 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
+          "$$hashKey": "object:131",
           "decimals": 1,
           "format": "short",
           "label": "pH",
@@ -338,66 +316,70 @@
           "show": true
         },
         {
-          "decimals": null,
+          "$$hashKey": "object:132",
           "format": "short",
           "label": "Orp (mV)",
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
-      "datasource": "${DS_INFLUXDB}",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Water temp.",
+          "mappings": [],
+          "max": 30,
+          "min": 10,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 27
+              },
+              {
+                "color": "red",
+                "value": 29
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 4,
-        "w": 3,
+        "h": 6,
+        "w": 4,
         "x": 19,
         "y": 0
       },
       "id": 6,
       "options": {
-        "fieldOptions": {
+        "orientation": "auto",
+        "reduceOptions": {
           "calcs": [
-            "mean"
+            "last"
           ],
-          "defaults": {
-            "mappings": [],
-            "max": 30,
-            "min": 10,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "blue",
-                  "value": null
-                },
-                {
-                  "color": "green",
-                  "value": 27
-                },
-                {
-                  "color": "red",
-                  "value": 29
-                }
-              ]
-            },
-            "title": "Water temp.",
-            "unit": "celsius"
-          },
-          "overrides": [],
+          "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "6.7.1",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
           "alias": "Water temp.",
@@ -405,6 +387,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"Tmp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))\r\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -427,146 +410,77 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "",
       "transparent": true,
       "type": "gauge"
     },
     {
-      "datasource": "${DS_INFLUXDB}",
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 19,
-        "y": 4
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
       },
-      "id": 9,
-      "options": {
-        "fieldOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "defaults": {
-            "mappings": [],
-            "max": 850,
-            "min": 600,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "dark-red",
-                  "value": null
-                },
-                {
-                  "color": "dark-green",
-                  "value": 700
-                },
-                {
-                  "color": "dark-red",
-                  "value": 800
-                }
-              ]
-            },
-            "title": "Orp (mV)",
-            "unit": "none"
-          },
-          "overrides": [],
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "6.7.1",
-      "targets": [
-        {
-          "alias": "Orp",
-          "groupBy": [],
-          "measurement": "PoolMaster",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Outside temp.",
+          "mappings": [],
+          "max": 30,
+          "min": 10,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "params": [
-                  "Orp"
-                ],
-                "type": "field"
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 27
+              },
+              {
+                "color": "red",
+                "value": 29
               }
             ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "",
-      "transparent": true,
-      "type": "gauge"
-    },
-    {
-      "datasource": "${DS_INFLUXDB}",
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 19,
-        "y": 8
-      },
-      "id": 10,
-      "options": {
-        "fieldOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "defaults": {
-            "mappings": [],
-            "max": 7.8,
-            "min": 7,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "dark-red",
-                  "value": null
-                },
-                {
-                  "color": "dark-green",
-                  "value": 7.2
-                },
-                {
-                  "color": "dark-red",
-                  "value": 7.6
-                }
-              ]
-            },
-            "title": "pH",
-            "unit": "none"
           },
-          "overrides": [],
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 19,
+        "y": 6
+      },
+      "id": 25,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "6.7.1",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
-          "alias": "pH",
+          "alias": "Outside temp.",
           "groupBy": [],
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"TmpExt\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))\r\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "pH"
+                  "Tmp"
                 ],
                 "type": "field"
               },
@@ -578,12 +492,10 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [],
+          "tz": ""
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "",
       "transparent": true,
       "type": "gauge"
     },
@@ -597,7 +509,16 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_INFLUXDB}",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 3,
       "fillGradient": 3,
       "gridPos": {
@@ -621,18 +542,21 @@
       "linewidth": 1,
       "nullPointMode": "connected",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "8.5.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [
         {
+          "$$hashKey": "object:189",
           "alias": "Temperature",
           "yaxis": 2
         },
         {
+          "$$hashKey": "object:190",
           "alias": "Filtration",
           "fill": 1,
           "fillGradient": 3,
@@ -642,6 +566,7 @@
           "steppedLine": true
         },
         {
+          "$$hashKey": "object:191",
           "alias": "Water setpoint",
           "fill": 0,
           "fillGradient": 0,
@@ -660,7 +585,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"PSI\")  / 100 FROM \"PoolMaster\" WHERE $timeFilter GROUP BY time(1m) fill(linear)",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"PSI\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -688,6 +613,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"Tmp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -714,7 +640,7 @@
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"FiltState\" FROM \"PoolMaster\" WHERE $timeFilter",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_field\"] == \"FiltState\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -733,9 +659,11 @@
         {
           "alias": "Water setpoint",
           "groupBy": [],
+          "hide": true,
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"WSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -758,10 +686,8 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
-      "title": "Water pressure & temperature",
+      "title": "Water Temperature and Pressure",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -769,52 +695,151 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
+          "$$hashKey": "object:330",
           "format": "short",
           "label": "Pressure (bar)",
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
+          "$$hashKey": "object:331",
           "format": "none",
           "label": "Temperature (°C)",
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "Orp (mV)",
+          "mappings": [],
+          "max": 850,
+          "min": 600,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-green",
+                "value": 700
+              },
+              {
+                "color": "dark-red",
+                "value": 800
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 19,
+        "y": 12
+      },
+      "id": 9,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.5.6",
+      "targets": [
+        {
+          "alias": "Orp",
+          "groupBy": [],
+          "measurement": "PoolMaster",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"Orp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Orp"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
       ],
-      "datasource": "${DS_INFLUXDB}",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "transparent": true,
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "Manual"
+                },
+                "1": {
+                  "text": "Auto"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d44a3a"
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0.2
+              },
+              {
+                "color": "#299c46",
+                "value": 0.3
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 2,
@@ -823,48 +848,31 @@
         "y": 17
       },
       "id": 18,
-      "interval": null,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
       },
-      "tableColumn": "",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
           "groupBy": [],
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"AutoMode\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -880,93 +888,84 @@
           "tags": []
         }
       ],
-      "thresholds": "0.2,0.3",
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Mode",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "Manual",
-          "value": "0"
-        },
-        {
-          "op": "=",
-          "text": "Auto",
-          "value": "1"
-        }
-      ],
-      "valueName": "current"
+      "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": "${DS_INFLUXDB}",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "OFF"
+                },
+                "1": {
+                  "text": "ON"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d44a3a"
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0.2
+              },
+              {
+                "color": "#299c46",
+                "value": 0.3
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 2,
-        "w": 2,
+        "w": 4,
         "x": 2,
         "y": 17
       },
       "id": 19,
-      "interval": null,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
       },
-      "tableColumn": "",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
           "groupBy": [],
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"FiltState\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -982,195 +981,82 @@
           "tags": []
         }
       ],
-      "thresholds": "0.2,0.3",
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Filtration",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "OFF",
-          "value": "0"
-        },
-        {
-          "op": "=",
-          "text": "ON",
-          "value": "1"
-        }
-      ],
-      "valueName": "current"
+      "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": "${DS_INFLUXDB}",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
       },
-      "gridPos": {
-        "h": 2,
-        "w": 2,
-        "x": 4,
-        "y": 17
-      },
-      "id": 20,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "groupBy": [],
-          "measurement": "PoolMaster",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "params": [
-                  "WaterHeat"
-                ],
-                "type": "field"
+                "color": "#299c46"
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 10
+              },
+              {
+                "color": "#d44a3a",
+                "value": 20
               }
             ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "0.2,0.3",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Heating",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "OFF",
-          "value": "0"
+          },
+          "unit": "s"
         },
-        {
-          "op": "=",
-          "text": "ON",
-          "value": "1"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "${DS_INFLUXDB}",
-      "format": "m",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+        "overrides": []
       },
       "gridPos": {
         "h": 2,
-        "w": 3,
-        "x": 8,
+        "w": 8,
+        "x": 6,
         "y": 17
       },
       "id": 21,
-      "interval": null,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "30%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "/^PoolMaster ChlUpT$/",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
       },
-      "tableColumn": "",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
           "groupBy": [],
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_field\"] == \"ChlUpT\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")\r\n  |> map(fn: (r) => ({ _value: r._value / 60.0 }))\r\n  |> cumulativeSum(columns: [\"_value\"])",
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -1192,88 +1078,356 @@
           "tags": []
         }
       ],
-      "thresholds": "10,20",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Chl pump uptime",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
+      "title": "Up time chl pump",
+      "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "",
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red"
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 5,
+        "x": 14,
+        "y": 17
+      },
+      "id": 24,
+      "options": {
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "8.5.6",
+      "targets": [
+        {
+          "alias": "ChlTank",
+          "groupBy": [],
+          "measurement": "PoolMaster",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"ChlF\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "ChlF"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "AcidTank",
+          "groupBy": [],
+          "measurement": "PoolMaster",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"AcidF\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcidF"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
       ],
-      "datasource": "${DS_INFLUXDB}",
-      "format": "m",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "title": "Tank level",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "pH",
+          "mappings": [],
+          "max": 7.8,
+          "min": 7,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red"
+              },
+              {
+                "color": "dark-green",
+                "value": 7.2
+              },
+              {
+                "color": "dark-red",
+                "value": 7.6
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 19,
+        "y": 17
+      },
+      "id": 10,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.5.6",
+      "targets": [
+        {
+          "alias": "pH",
+          "groupBy": [],
+          "measurement": "PoolMaster",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"PoolMaster\" and r._field == \"pH\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({r with _value: float(v: r._value) / 100.0} ))\r\n  ",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "pH"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  " / 100"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "transparent": true,
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "OFF"
+                },
+                "1": {
+                  "text": "ON"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d44a3a"
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0.2
+              },
+              {
+                "color": "#299c46",
+                "value": 0.3
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 2,
-        "w": 3,
-        "x": 11,
-        "y": 17
+        "w": 2,
+        "x": 0,
+        "y": 19
       },
-      "id": 22,
-      "interval": null,
+      "id": 20,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "30%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
       },
-      "tableColumn": "",
+      "pluginVersion": "8.5.6",
       "targets": [
         {
           "groupBy": [],
           "measurement": "PoolMaster",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"WaterHeat\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "WaterHeat"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Heat",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "k5-sZU2nk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46"
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 10
+              },
+              {
+                "color": "#d44a3a",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 8,
+        "x": 6,
+        "y": 19
+      },
+      "id": 22,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "/^PoolMaster PhUpT$/",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.5.6",
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "PoolMaster",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"HomeAssistant\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"PoolMaster\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"PhUpT\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")\r\n  |> map(fn: (r) => ({ _value: r._value / 60.0 }))\r\n  |> cumulativeSum(columns: [\"_value\"])",
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -1295,118 +1449,19 @@
           "tags": []
         }
       ],
-      "thresholds": "10,20",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "pH pump uptime",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "datasource": "${DS_INFLUXDB}",
-      "gridPos": {
-        "h": 2,
-        "w": 5,
-        "x": 14,
-        "y": 17
-      },
-      "id": 24,
-      "options": {
-        "displayMode": "lcd",
-        "fieldOptions": {
-          "calcs": [
-            "last"
-          ],
-          "defaults": {
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "dark-red",
-                  "value": null
-                },
-                {
-                  "color": "semi-dark-green",
-                  "value": 20
-                }
-              ]
-            },
-            "title": "",
-            "unit": "percent"
-          },
-          "overrides": [],
-          "values": false
-        },
-        "orientation": "horizontal",
-        "showUnfilled": true
-      },
-      "pluginVersion": "6.7.1",
-      "targets": [
-        {
-          "alias": "ChlTank",
-          "groupBy": [],
-          "measurement": "PoolMaster",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "ChlF"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "AcidTank",
-          "groupBy": [],
-          "measurement": "PoolMaster",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "AcidF"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Tank levels",
-      "type": "bargauge"
+      "title": "Up time pH pump ",
+      "type": "stat"
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 22,
+  "refresh": "30s",
+  "schemaVersion": 36,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {
@@ -1424,10 +1479,8 @@
     ]
   },
   "timezone": "",
-  "title": "PoolMaster",
-  "uid": "jDrUHorWz",
-  "variables": {
-    "list": []
-  },
-  "version": 162
+  "title": "PoolMaster Overview",
+  "uid": "_mKohLl7z",
+  "version": 2,
+  "weekStart": ""
 }

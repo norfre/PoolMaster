@@ -14,7 +14,10 @@
         "topic": "Home/Pool/Meas1",
         "qos": "1",
         "datatype": "json",
-        "broker": "30654e7b.139f62",
+        "broker": "5b24a084f3b1da1e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
         "x": 320,
         "y": 160,
         "wires": [
@@ -31,6 +34,9 @@
         "func": "if(typeof msg.payload.IO !== 'undefined')\n{\n    var mask = msg.payload.IO;\n    var mask2 = msg.payload.IO2;\n    \n    msg.payload.FiltState = (mask >> 7) & 1;\n    msg.payload.pHPumpState = (mask >> 6) & 1;\n    msg.payload.ChlPumpState = (mask >> 5) & 1;\n    msg.payload.pHLevel = (mask >> 4) & 1;\n    msg.payload.ChlLevel = (mask >> 3) & 1;\n    msg.payload.PSIError = (mask >> 2) & 1;\n    msg.payload.pHPumpUpTimeErr = (mask >> 1) & 1;\n    msg.payload.ChlPumpUpTimeErr = (mask >> 0) & 1;\n    \n    msg.payload.pHPIDMode = (mask2 >> 7) & 1;\n    msg.payload.ChlPIDMode = (mask2 >> 6) & 1;\n    msg.payload.AutoMode = (mask2 >> 5) & 1;\n    msg.payload.WaterHeat = (mask2 >> 4) & 1;\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 860,
         "y": 260,
         "wires": [
@@ -43,11 +49,15 @@
         "id": "f7ec2835.38ff48",
         "type": "influxdb out",
         "z": "d91838d0.672e38",
-        "influxdb": "5682d297.1cc1ec",
+        "influxdb": "07690c7be9a74d04",
         "name": "Influx Pool",
         "measurement": "PoolMaster",
         "precision": "",
         "retentionPolicy": "",
+        "database": "",
+        "retentionPolicyV18Flux": "",
+        "org": "Tower",
+        "bucket": "HomeAssistant",
         "x": 1200,
         "y": 260,
         "wires": []
@@ -60,7 +70,10 @@
         "topic": "Home/Pool/Meas2",
         "qos": "1",
         "datatype": "json",
-        "broker": "30654e7b.139f62",
+        "broker": "5b24a084f3b1da1e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
         "x": 320,
         "y": 220,
         "wires": [
@@ -77,7 +90,10 @@
         "topic": "Home/Pool/Set1",
         "qos": "1",
         "datatype": "json",
-        "broker": "30654e7b.139f62",
+        "broker": "5b24a084f3b1da1e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
         "x": 310,
         "y": 280,
         "wires": [
@@ -94,7 +110,10 @@
         "topic": "Home/Pool/Set2",
         "qos": "1",
         "datatype": "json",
-        "broker": "30654e7b.139f62",
+        "broker": "5b24a084f3b1da1e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
         "x": 310,
         "y": 340,
         "wires": [
@@ -104,11 +123,10 @@
         ]
     },
     {
-        "id": "30654e7b.139f62",
+        "id": "5b24a084f3b1da1e",
         "type": "mqtt-broker",
-        "z": "",
         "name": "Local Broker",
-        "broker": "192.168.1.35",
+        "broker": "192.168.1.89",
         "port": "1883",
         "clientid": "CharNodeRed",
         "usetls": false,
@@ -127,15 +145,17 @@
         "willPayload": "offline"
     },
     {
-        "id": "5682d297.1cc1ec",
+        "id": "07690c7be9a74d04",
         "type": "influxdb",
-        "z": "",
-        "hostname": "192.168.1.35",
+        "hostname": "192.168.1.89",
         "port": "8086",
         "protocol": "http",
         "database": "Pool",
         "name": "Pool",
         "usetls": false,
-        "tls": ""
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://192.168.1.89:8086",
+        "rejectUnauthorized": true
     }
 ]
