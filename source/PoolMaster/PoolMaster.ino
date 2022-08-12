@@ -1271,7 +1271,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   if (storage.PrimaryWaterHEout2 == -127.00) {
     Serial << F("Error getting temperature from DS18b20_4") << _endl;
   } else {
-    Serial << F("DS18b20_4 (Primary water out 2nd heat exchanger): ") << storage.PrimaryWaterHEout1 << F("°C") << F(" - ") << _endl;
+    Serial << F("DS18b20_4 (Primary water out 2nd heat exchanger): ") << storage.PrimaryWaterHEout2 << F("°C") << F(" - ") << _endl;
   }
 
   //External temperature
