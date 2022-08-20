@@ -1289,7 +1289,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   //storage.PhValue = (0.0178 * ph_sensor_value * 200.0) - 1.889;                                       // formula to compute pH without taking temperature into account (assumes 27deg water temp)
   storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                //Calibrated sensor response based on multi-point linear regression
   samples_Ph.add(storage.PhValue);                                                                      // compute average of pH from last 5 measurements
-  storage.PhValue = samples_Ph.getAverage(10);
+  storage.PhValue = samples_Ph.getAverage(30);
   Serial << F("Ph: ") << storage.PhValue << F(" - ");
 
   //ORP
@@ -1297,7 +1297,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   //storage.OrpValue = ((2.5 - orp_sensor_value) / 1.037) * 1000.0;                                     // from -2000 to 2000 mV where the positive values are for oxidizers and the negative values are for reducers
   storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
   samples_Orp.add(storage.OrpValue);                                                                    // compute average of ORP from last 5 measurements
-  storage.OrpValue = samples_Orp.getAverage(10);
+  storage.OrpValue = samples_Orp.getAverage(20);
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
 
   //PSI (water pressure) --FNO EDIT - Using flow switch instead of a pressure sensor
