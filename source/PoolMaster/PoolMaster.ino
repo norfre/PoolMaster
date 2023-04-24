@@ -1283,8 +1283,8 @@ void getMeasures(DeviceAddress deviceAddress_0)
     Serial << F("DS18b20_5 (Temp external): ") << storage.TempExternal << F("°C") << F(" - ") << _endl;
   }
 
-  //Ph
-  float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V
+  //Ph 
+  float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V, TODO: Change this to from 0.0 to 3.0 V ((sensorvalue * -5.6548) + 15.509), ref. Atlas Scientific datasheet
   //storage.PhValue = 7.0 - ((2.5 - ph_sensor_value)/(0.257179 + 0.000941468 * storage.TempValue));     // formula to compute pH which takes water temperature into account
   //storage.PhValue = (0.0178 * ph_sensor_value * 200.0) - 1.889;                                       // formula to compute pH without taking temperature into account (assumes 27deg water temp)
   storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                //Calibrated sensor response based on multi-point linear regression
@@ -1293,7 +1293,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   Serial << F("Ph: ") << storage.PhValue << F(" - ");
 
   //ORP
-  float orp_sensor_value = analogRead(ORP_MEASURE) * 5.0 / 1023.0;                                      // from 0.0 to 5.0 V
+  float orp_sensor_value = (analogRead(ORP_MEASURE) * 1000) - 1500;                                     // from 0.0 to 3.0 V, where 0.0 V equals -1500 mV ORP and 3.0V equals +1500mV ORP, ref Atlas Scientific datasheet"
   //storage.OrpValue = ((2.5 - orp_sensor_value) / 1.037) * 1000.0;                                     // from -2000 to 2000 mV where the positive values are for oxidizers and the negative values are for reducers
   storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
   samples_Orp.add(storage.OrpValue);                                                                    // compute average of ORP from last 5 measurements
@@ -1444,7 +1444,7 @@ void ProcessCommand(String JSONCommand)
           storage.pHCalibCoeffs1 += CalibPoints[1] - CalibPoints[0];
 
           //Set slope back to default value
-          storage.pHCalibCoeffs0 = 3.76;
+          storage.pHCalibCoeffs0 = 3.76; //TODO: change to 1, ref. Atlas Scientific data sheet
 
           //Store the new coefficients in eeprom
           saveConfig();
@@ -1495,7 +1495,7 @@ void ProcessCommand(String JSONCommand)
             storage.OrpCalibCoeffs1 += CalibPoints[1] - CalibPoints[0];
 
             //Set slope back to default value
-            storage.OrpCalibCoeffs0 = -1000;
+            storage.OrpCalibCoeffs0 = 1;
 
             //Store the new coefficients in eeprom
             saveConfig();
@@ -1618,7 +1618,7 @@ void ProcessCommand(String JSONCommand)
                 else
                   PhPump.Start();           //start Acid pump
               }
-              else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Acid pump
+              else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Chlorine pump
               {
                 if ((int)command[F("ChlPump")] == 0)
                   ChlPump.Stop();          //stop Chl pump
@@ -1864,21 +1864,21 @@ void ProcessCommand(String JSONCommand)
                     }
                     else if (command.containsKey(F("RstpHCal")))//"RstpHCal" reset the calibration coefficients of the pH probe
                     {
-                      storage.pHCalibCoeffs0 = 4.3;
-                      storage.pHCalibCoeffs1 = -2.63;
+                      storage.pHCalibCoeffs0 = 1; 
+                      storage.pHCalibCoeffs1 = 0;
                       saveConfig();
                       PublishSettings();
                     }
                     else if (command.containsKey(F("RstOrpCal")))//"RstOrpCal" reset the calibration coefficients of the Orp probe
                     {
-                      storage.OrpCalibCoeffs0 = -1189;
-                      storage.OrpCalibCoeffs1 = 2564;
+                      storage.OrpCalibCoeffs0 = 1;
+                      storage.OrpCalibCoeffs1 = 0; 
                       saveConfig();
                       PublishSettings();
                     }
                     else if (command.containsKey(F("RstPSICal")))//"RstPSICal" reset the calibration coefficients of the pressure sensor
                     {
-                      storage.PSICalibCoeffs0 = 1.11;
+                      storage.PSICalibCoeffs0 = 1;
                       storage.PSICalibCoeffs1 = 0;
                       saveConfig();
                       PublishSettings();

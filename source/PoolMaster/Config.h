@@ -25,7 +25,7 @@
 #define CHL_LEVEL  CONTROLLINO_D1       //CONTROLLINO_D1 pin 3
 #define PH_LEVEL   CONTROLLINO_D3       //CONTROLLINO_D3 pin 5
 
-//Analog input pins connected to Phidgets 1130_0 pH/ORP Adapters.
+//Analog input pins connected to Phidgets 1130_0 pH/ORP Adapters. (FNO Edit: Atlas Scientific used instead of Phidgets)
 //Galvanic isolation circuitry between Adapters and Arduino required!
 #define ORP_MEASURE CONTROLLINO_A2      //CONTROLLINO_A2 pin A2 on pin header connector, not on screw terminal (/!\)
 #define PH_MEASURE  CONTROLLINO_A4      //CONTROLLINO_A4 pin A4 on pin header connector, not on screw terminal (/!\)
@@ -148,7 +148,7 @@ struct StoreStruct
   0, 24, 24, 24, 120,
   900, 2500,
   3000000, 3600000, 0, 0,
-  7.4, 750.0, 0.5, 0.25, 10.0, 27.0, 3.0, 4.78, -2.54, -1291, 2580, 1.11, 0.0,
+  7.4, 750.0, 0.5, 0.25, 10.0, 27.0, 3.0, 4.78, -2.54, -1291, 2580, 1.11, 0.0,  //Todo: Update calibration parameters with own ones
   2000000.0, 0.0, 0.0, 4500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4,
   100.0, 100.0, 20.0, 20.0, 1.5, 3.0,
   {192, 168, 1, 226}, {255, 255, 255, 0}, {192, 168, 1, 1}, {1, 1, 1, 1}, {0xA8, 0x61, 0x0A, 0xAE, 0x2C, 0x68},
