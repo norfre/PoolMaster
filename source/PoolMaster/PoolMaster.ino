@@ -171,6 +171,18 @@ EasyNex myNex(Serial2);
 LiquidCrystal_I2C lcd(0x27, 20, 4); // set the I2C LCD address to 0x27 for a 20 chars and 4 lines display
 bool LCDToggle = true;
 
+//ORP I2C init
+const int EzoORPAddress = 0x62; // I2C address of the Atlas Scientific Ezo ORP circuit
+const int ReadCommand = 0x52; // command to read ORP values from the Ezo ORP circuit
+
+//Various stuff for Atlas Scinentific EZO ORP Circuit
+byte j = 0;                      //counter used for ORP_data array.
+byte code = 0;                   //used to hold the I2C response code.
+char ORP_data[32];               //we make a 32 byte character array to hold incoming data from the ORP circuit.
+byte in_char = 0;                //used as a 1 byte buffer to store inbound bytes from the ORP Circuit.
+int time_ = 815;                 //used to change the delay needed depending on the command sent to the EZO Class ORP Circuit.
+float ORP_float = 666.6;         //float var used to hold the float value of the ORP.
+
 //Front panel push button switch used to reset system errors
 //Short press to toggle between LCD screens, double-tap to manually start/stop filtration or Long press to reset system errors (pH and Orp pumps overtime error or Pressure sensor error)
 const byte
@@ -251,6 +263,12 @@ String _endl = "\n";
 //the nice "YASM" state-machine library to do other things while it is being obtained
 YASM gettemp;
 
+//State Machine
+//Getting ORP reading takes time
+//Here we use the sensor in asynchronous mode, request an orp reading and use
+//the nice "YASM" state-machine library to do other things while it is being obtained
+YASM getorp;
+
 //Callbacks
 //Here we use the SoftTimer library which handles multiple timers (Tasks)
 //It is more elegant and readable than a single loop() functtion, especially
@@ -308,6 +326,9 @@ void setup()
   // set up the I2C LCD
   lcd.init();                      // initialize the lcd
   lcd.backlight();
+  
+  // set up the I2C ORP
+  Wire.begin();                 //enable I2C port.
 
   //RTC Stuff (embedded battery operated clock). In case board is MEGA_2560, need to initialize the date time!
 #if defined(CONTROLLINO_MAXI)
@@ -398,6 +419,10 @@ void setup()
 
   //Start temperature measurement state machine
   gettemp.next(gettemp_start);
+
+  //Start ORP measurement state machine
+  getorp.next(getorp_start);
+  Serial << F("Start ORP state machine") << _endl;
 
   // Set status LEDS Correct at power-on
   if (!PSIError && !PhPump.UpTimeError && !ChlPump.UpTimeError) {
@@ -625,6 +650,9 @@ void GenericCallback(Task* me)
 
   //request temp reading
   gettemp.run();
+
+  //request orp reading
+  getorp.run();
 
   //Update MQTT thread
   MQTTClient.loop();
@@ -1284,18 +1312,19 @@ void getMeasures(DeviceAddress deviceAddress_0)
   }
 
   //Ph 
-  float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V, TODO: Change this to from 0.0 to 3.0 V ((sensorvalue * -5.6548) + 15.509), ref. Atlas Scientific datasheet
+  float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V
   //storage.PhValue = 7.0 - ((2.5 - ph_sensor_value)/(0.257179 + 0.000941468 * storage.TempValue));     // formula to compute pH which takes water temperature into account
   //storage.PhValue = (0.0178 * ph_sensor_value * 200.0) - 1.889;                                       // formula to compute pH without taking temperature into account (assumes 27deg water temp)
   storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                //Calibrated sensor response based on multi-point linear regression
   samples_Ph.add(storage.PhValue);                                                                      // compute average of pH from last 5 measurements
   storage.PhValue = samples_Ph.getAverage(30);
-  Serial << F("Ph: ") << storage.PhValue << F(" - ");
+  Serial << F("Ph: ") << ph_sensor_value << " - "  << storage.PhValue << F(" - ");
 
   //ORP
-  float orp_sensor_value = (analogRead(ORP_MEASURE) * 1000) - 1500;                                     // from 0.0 to 3.0 V, where 0.0 V equals -1500 mV ORP and 3.0V equals +1500mV ORP, ref Atlas Scientific datasheet"
+  //float orp_sensor_value = (analogRead(ORP_MEASURE) * 5.0 / 1023.0 * 1000);                           // ffrom 0.0 to 5.0 V
   //storage.OrpValue = ((2.5 - orp_sensor_value) / 1.037) * 1000.0;                                     // from -2000 to 2000 mV where the positive values are for oxidizers and the negative values are for reducers
-  storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
+  float orp_sensor_value = ORP_float - 13.4;                                                            // get value from i2c sensor -> see orp state machine, add hard coded calibration offset (-13.4)
+  storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            // Calibrated sensor response based on multi-point linear regression
   samples_Orp.add(storage.OrpValue);                                                                    // compute average of ORP from last 5 measurements
   storage.OrpValue = samples_Orp.getAverage(20);
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
@@ -1952,6 +1981,73 @@ void gettemp_read()
   getMeasures(DS18b20_4);
   getMeasures(DS18b20_5);
   gettemp.next(gettemp_request);
+}
+
+////////////////////////getorp state machine///////////////////////////////////
+//Init orp reading
+void getorp_start()
+{
+  //Nothing here yet 
+  getorp.next(getorp_request);
+}
+
+//Request orp asynchronously
+void getorp_request()
+{
+  Wire.beginTransmission(EzoORPAddress);
+  Wire.write(ReadCommand);  
+  Wire.endTransmission();                 //end the I2C data transmission.
+  getorp.next(getorp_wait);
+}
+
+//Wait for requested orp measurement
+void getorp_wait()
+{ 
+  //we need to wait 815ms so that the circuit has time to take the reading
+  if (getorp.elapsed(time_))
+    getorp.next(getorp_read);
+}
+
+//Read and print orp measurement
+void getorp_read()
+{
+  // read the ORP values from the Ezo ORP circuit
+  Wire.requestFrom(EzoORPAddress, 32, 1);
+  code = Wire.read();                   //the first byte is the response code, we read this separately.
+
+  /*  Use this section for debug
+  switch (code) {                       //switch case based on what the response code is.
+    case 1:                             //decimal 1.
+      Serial << F("ORP read ok");       //means the command was successful.
+      break;                            //exits the switch case.
+
+    case 2:                             //decimal 2.
+      Serial << F("ORP read failed");   //means the command has failed.
+      break;                            //exits the switch case.
+
+    case 254:                           //decimal 254.
+      Serial << F("ORP read pending");  //means the command has not yet been finished calculating.
+      break;                            //exits the switch case.
+
+    case 255:                           //decimal 255.
+      Serial << F("ORP read no data");  //means there is no further data to send.
+      break;                            //exits the switch case.
+      }
+  */
+
+  // read the ORP values from the Ezo ORP circuit
+  while (Wire.available()) {            //are there bytes to receive.
+    in_char = Wire.read();              //receive a byte.
+    ORP_data[j] = in_char;              //load this byte into our array.
+    j += 1;                             //incur the counter for the array element.
+    if (in_char == 0) {                 //if we see that we have been sent a null command.
+      j = 0;                            //reset the counter i to 0.
+      break;                            //exit the while loop.
+      }
+    }
+
+  ORP_float=atof(ORP_data);             //take the ORP value and convert it into floating point number
+  getorp.next(getorp_request);
 }
 
 //Linear regression coefficients calculation function
