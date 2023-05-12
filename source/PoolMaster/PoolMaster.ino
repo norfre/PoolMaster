@@ -235,16 +235,16 @@ uint8_t BitMap2 = 0;
 //MQTT publishing periodicity of system info, in msecs
 unsigned long PublishPeriod = 30000;
 
-//Signal filtering library. Only used in this case to compute the average
-//over multiple measurements but offers other filtering functions such as median, etc.
+//Signal filtering library. Offers filtering functions such as median, etc.
+//Define arrays and their respective sizes
 RunningMedian samples_Temp = RunningMedian(10);
 RunningMedian samples_Temp_1 = RunningMedian(10);
 RunningMedian samples_Temp_2 = RunningMedian(10);
 RunningMedian samples_Temp_3 = RunningMedian(10);
 RunningMedian samples_Temp_4 = RunningMedian(10);
 RunningMedian samples_Temp_5 = RunningMedian(10);
-RunningMedian samples_Ph = RunningMedian(10);
-RunningMedian samples_Orp = RunningMedian(10);
+RunningMedian samples_Ph = RunningMedian(29);             // TODO: This draws a lot of memory -> maybe improve?
+RunningMedian samples_Orp = RunningMedian(19);
 RunningMedian samples_PSI = RunningMedian(3);
 
 EthernetServer server(80);      //Create a server at port 80
@@ -1315,9 +1315,9 @@ void getMeasures(DeviceAddress deviceAddress_0)
   float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V
   //storage.PhValue = 7.0 - ((2.5 - ph_sensor_value)/(0.257179 + 0.000941468 * storage.TempValue));     // formula to compute pH which takes water temperature into account
   //storage.PhValue = (0.0178 * ph_sensor_value * 200.0) - 1.889;                                       // formula to compute pH without taking temperature into account (assumes 27deg water temp)
-  storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                //Calibrated sensor response based on multi-point linear regression
-  samples_Ph.add(storage.PhValue);                                                                      // compute average of pH from last 5 measurements
-  storage.PhValue = samples_Ph.getAverage(30);
+  storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                // Calibrated sensor response based on multi-point linear regression
+  samples_Ph.add(storage.PhValue);                                                                      // add latest sample to array
+  storage.PhValue = samples_Ph.getAverage(5);                                                            // compute average of the middle 5 values in the array, effectively removes noise from outliers
   Serial << F("Ph: ") << ph_sensor_value << " - "  << storage.PhValue << F(" - ");
 
   //ORP
@@ -1325,16 +1325,16 @@ void getMeasures(DeviceAddress deviceAddress_0)
   //storage.OrpValue = ((2.5 - orp_sensor_value) / 1.037) * 1000.0;                                     // from -2000 to 2000 mV where the positive values are for oxidizers and the negative values are for reducers
   float orp_sensor_value = ORP_float - 13.4;                                                            // get value from i2c sensor -> see orp state machine, add hard coded calibration offset (-13.4)
   storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            // Calibrated sensor response based on multi-point linear regression
-  samples_Orp.add(storage.OrpValue);                                                                    // compute average of ORP from last 5 measurements
-  storage.OrpValue = samples_Orp.getAverage(20);
+  samples_Orp.add(storage.OrpValue);                                                                    // add latest sample to array
+  storage.OrpValue = samples_Orp.getAverage(5);                                                         // compute average of the middle 5 values in the array, effectively removes noise from outliers
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
 
   //PSI (water pressure) --FNO EDIT - Using flow switch instead of a pressure sensor
   /*
-  float psi_sensor_value = ((analogRead(PSI_MEASURE) * 0.03) - 0.5) * 5.0 / 4.0;                        // from 0.5 to 4.5V -> 0.0 to 5.0 Bar (depends on sensor ref!)                                                                           // Remove this line when sensor is integrated!!!
+  float psi_sensor_value = ((analogRead(PSI_MEASURE) * 0.03) - 0.5) * 5.0 / 4.0;                        // from 0.5 to 4.5V -> 0.0 to 5.0 Bar (depends on sensor ref!)         // Remove this line when sensor is integrated!!!
   storage.PSIValue = (storage.PSICalibCoeffs0 * psi_sensor_value) + storage.PSICalibCoeffs1;            //Calibrated sensor response based on multi-point linear regression
-  samples_PSI.add(storage.PSIValue);                                                                    // compute average of PSI from last 5 measurements
-  storage.PSIValue = samples_PSI.getAverage(3);
+  samples_PSI.add(storage.PSIValue);                                                                    // add latest sample to array
+  storage.PSIValue = samples_PSI.getAverage(3);                                                         // compute average of the middle 3 values in the array, effectively removes noise from outliers
   Serial << F("PSI: ") << psi_sensor_value << " - " << storage.PSIValue << F("Bar") << _endl;
   */
 
