@@ -237,14 +237,14 @@ unsigned long PublishPeriod = 30000;
 
 //Signal filtering library. Offers filtering functions such as median, etc.
 //Define arrays and their respective sizes
-RunningMedian samples_Temp = RunningMedian(10);
-RunningMedian samples_Temp_1 = RunningMedian(10);
-RunningMedian samples_Temp_2 = RunningMedian(10);
-RunningMedian samples_Temp_3 = RunningMedian(10);
-RunningMedian samples_Temp_4 = RunningMedian(10);
-RunningMedian samples_Temp_5 = RunningMedian(10);
-RunningMedian samples_Ph = RunningMedian(29);             // TODO: This draws a lot of memory -> maybe improve?
-RunningMedian samples_Orp = RunningMedian(19);
+RunningMedian samples_Temp = RunningMedian(3);
+RunningMedian samples_Temp_1 = RunningMedian(3);
+RunningMedian samples_Temp_2 = RunningMedian(3);
+RunningMedian samples_Temp_3 = RunningMedian(3);
+RunningMedian samples_Temp_4 = RunningMedian(3);
+RunningMedian samples_Temp_5 = RunningMedian(3);
+RunningMedian samples_Ph = RunningMedian(134);                    // High value due to erratic PH reading - draws quite a lot of memory, so should perhaps be improved
+RunningMedian samples_Orp = RunningMedian(3);
 RunningMedian samples_PSI = RunningMedian(3);
 
 EthernetServer server(80);      //Create a server at port 80
@@ -1259,7 +1259,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
 
   //Pool water temperature
   samples_Temp.add(sensors_A.getTempC(DS18b20_0));
-  storage.TempValue = samples_Temp.getAverage(10);
+  storage.TempValue = samples_Temp.getAverage(3);
   if (storage.TempValue == -127.00) {
     Serial << F("Error getting temperature from DS18b20_0") << _endl;
   } else {
@@ -1268,7 +1268,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
 
   //Pool water out 1st heat exchanger temperature
   samples_Temp_1.add(sensors_A.getTempC(DS18b20_1));
-  storage.PoolWaterHEout1 = samples_Temp_1.getAverage(10);
+  storage.PoolWaterHEout1 = samples_Temp_1.getAverage(3);
   if (storage.PoolWaterHEout1 == -127.00) {
     Serial << F("Error getting temperature from DS18b20_1") << _endl;
   } else {
@@ -1277,7 +1277,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
 
   //Pool water out 2nd heat exchanger temperature
   samples_Temp_2.add(sensors_A.getTempC(DS18b20_2));
-  storage.PoolWaterHEout2 = samples_Temp_2.getAverage(10);
+  storage.PoolWaterHEout2 = samples_Temp_2.getAverage(3);
   if (storage.PoolWaterHEout2 == -127.00) {
     Serial << F("Error getting temperature from DS18b20_2") << _endl;
   } else {
@@ -1286,7 +1286,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   
   //Primary water out 1st heat exchanger temperature
   samples_Temp_3.add(sensors_A.getTempC(DS18b20_3));
-  storage.PrimaryWaterHEout1 = samples_Temp_3.getAverage(10);
+  storage.PrimaryWaterHEout1 = samples_Temp_3.getAverage(3);
   if (storage.TempExternal == -127.00) {
     Serial << F("Error getting temperature from DS18b20_3") << _endl;
   } else {
@@ -1295,7 +1295,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
 
   //Primary water out 2nd heat exchanger temperature
   samples_Temp_4.add(sensors_A.getTempC(DS18b20_4));
-  storage.PrimaryWaterHEout2 = samples_Temp_4.getAverage(10);
+  storage.PrimaryWaterHEout2 = samples_Temp_4.getAverage(3);
   if (storage.PrimaryWaterHEout2 == -127.00) {
     Serial << F("Error getting temperature from DS18b20_4") << _endl;
   } else {
@@ -1304,20 +1304,18 @@ void getMeasures(DeviceAddress deviceAddress_0)
 
   //External temperature
   samples_Temp_5.add(sensors_A.getTempC(DS18b20_5));
-  storage.TempExternal = samples_Temp_5.getAverage(10);
+  storage.TempExternal = samples_Temp_5.getAverage(3);
   if (storage.TempExternal == -127.00) {
     Serial << F("Error getting temperature from DS18b20_5") << _endl;
   } else {
     Serial << F("DS18b20_5 (Temp external): ") << storage.TempExternal << F("°C") << F(" - ") << _endl;
   }
 
-  //Ph 
+  //Ph
   float ph_sensor_value = analogRead(PH_MEASURE) * 5.0 / 1023.0;                                        // from 0.0 to 5.0 V
-  //storage.PhValue = 7.0 - ((2.5 - ph_sensor_value)/(0.257179 + 0.000941468 * storage.TempValue));     // formula to compute pH which takes water temperature into account
-  //storage.PhValue = (0.0178 * ph_sensor_value * 200.0) - 1.889;                                       // formula to compute pH without taking temperature into account (assumes 27deg water temp)
   storage.PhValue = (storage.pHCalibCoeffs0 * ph_sensor_value) + storage.pHCalibCoeffs1;                // Calibrated sensor response based on multi-point linear regression
   samples_Ph.add(storage.PhValue);                                                                      // add latest sample to array
-  storage.PhValue = samples_Ph.getAverage(5);                                                            // compute average of the middle 5 values in the array, effectively removes noise from outliers
+  storage.PhValue = samples_Ph.getAverage(129);                                                         // compute average of the middle 129 values in the array, effectively removes noise from outliers
   Serial << F("Ph: ") << ph_sensor_value << " - "  << storage.PhValue << F(" - ");
 
   //ORP
@@ -1326,7 +1324,7 @@ void getMeasures(DeviceAddress deviceAddress_0)
   float orp_sensor_value = ORP_float - 13.4;                                                            // get value from i2c sensor -> see orp state machine, add hard coded calibration offset (-13.4)
   storage.OrpValue = (storage.OrpCalibCoeffs0 * orp_sensor_value) + storage.OrpCalibCoeffs1;            // Calibrated sensor response based on multi-point linear regression
   samples_Orp.add(storage.OrpValue);                                                                    // add latest sample to array
-  storage.OrpValue = samples_Orp.getAverage(5);                                                         // compute average of the middle 5 values in the array, effectively removes noise from outliers
+  storage.OrpValue = samples_Orp.getAverage(3);                                                         // compute average of the middle 5 values in the array, effectively removes noise from outliers
   Serial << F("Orp: ") << orp_sensor_value << " - " << storage.OrpValue << F("mV") << _endl;
 
   //PSI (water pressure) --FNO EDIT - Using flow switch instead of a pressure sensor
